@@ -1,0 +1,1 @@
+export default function CreateProfile() { return <div className="p-8">Create Profile Page</div>; }

@@ -1,0 +1,1 @@
+export default function CreateClub() { return <div className="p-8">Create Club Page</div>; }

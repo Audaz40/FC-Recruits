@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "FC Recruits"
+version = "1.0.0"
+id = "artifacts/fc-recruits"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24564
+
+[services.development]
+run = "pnpm --filter @workspace/fc-recruits run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/fc-recruits", "run", "build" ]
+publicDir = "artifacts/fc-recruits/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24564"
+BASE_PATH = "/"

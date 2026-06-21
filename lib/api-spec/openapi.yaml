@@ -1,22 +1,31 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: FC Recruits - EA Sports FC Pro Clubs recruitment platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: players
+    description: Player profile operations
+  - name: clubs
+    description: Club profile operations
+  - name: tryouts
+    description: Tryout system operations
+  - name: notifications
+    description: Notification operations
+  - name: stats
+    description: Platform stats and aggregates
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +33,1032 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ─── PLAYERS ────────────────────────────────────────────────────────────────
+  /players:
+    get:
+      operationId: listPlayers
+      tags: [players]
+      summary: List and search players with filters
+      parameters:
+        - name: position
+          in: query
+          schema:
+            type: string
+        - name: platform
+          in: query
+          schema:
+            type: string
+        - name: country
+          in: query
+          schema:
+            type: string
+        - name: timezone
+          in: query
+          schema:
+            type: string
+        - name: minRating
+          in: query
+          schema:
+            type: integer
+        - name: maxRating
+          in: query
+          schema:
+            type: integer
+        - name: available
+          in: query
+          schema:
+            type: boolean
+        - name: freeAgent
+          in: query
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of players
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayerList"
+    post:
+      operationId: createPlayer
+      tags: [players]
+      summary: Create player profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlayerInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Player"
+
+  /players/me:
+    get:
+      operationId: getMyPlayer
+      tags: [players]
+      summary: Get current user's player profile
+      responses:
+        "200":
+          description: Player profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Player"
+        "404":
+          description: No profile yet
+
+  /players/featured:
+    get:
+      operationId: getFeaturedPlayers
+      tags: [players]
+      summary: Get featured/top-rated free agent players
+      responses:
+        "200":
+          description: Featured players
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayerList"
+
+  /players/{id}:
+    get:
+      operationId: getPlayer
+      tags: [players]
+      summary: Get player profile by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Player profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Player"
+        "404":
+          description: Not found
+    patch:
+      operationId: updatePlayer
+      tags: [players]
+      summary: Update player profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlayerUpdate"
+      responses:
+        "200":
+          description: Updated player
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Player"
+
+  # ─── CLUBS ──────────────────────────────────────────────────────────────────
+  /clubs:
+    get:
+      operationId: listClubs
+      tags: [clubs]
+      summary: List and search clubs with filters
+      parameters:
+        - name: platform
+          in: query
+          schema:
+            type: string
+        - name: style
+          in: query
+          schema:
+            type: string
+        - name: division
+          in: query
+          schema:
+            type: integer
+        - name: openPosition
+          in: query
+          schema:
+            type: string
+        - name: country
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of clubs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubList"
+    post:
+      operationId: createClub
+      tags: [clubs]
+      summary: Create a club
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClubInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Club"
+
+  /clubs/featured:
+    get:
+      operationId: getFeaturedClubs
+      tags: [clubs]
+      summary: Get featured/active clubs actively recruiting
+      responses:
+        "200":
+          description: Featured clubs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubList"
+
+  /clubs/{id}:
+    get:
+      operationId: getClub
+      tags: [clubs]
+      summary: Get club by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Club
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Club"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateClub
+      tags: [clubs]
+      summary: Update club
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClubUpdate"
+      responses:
+        "200":
+          description: Updated club
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Club"
+    delete:
+      operationId: deleteClub
+      tags: [clubs]
+      summary: Delete club
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /clubs/{id}/members:
+    get:
+      operationId: getClubMembers
+      tags: [clubs]
+      summary: Get members of a club
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Club members
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberList"
+    post:
+      operationId: addClubMember
+      tags: [clubs]
+      summary: Add member to club
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberInput"
+      responses:
+        "201":
+          description: Member added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+
+  /clubs/{id}/members/{playerId}:
+    delete:
+      operationId: removeClubMember
+      tags: [clubs]
+      summary: Remove member from club
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: playerId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removed
+
+  # ─── TRYOUTS ────────────────────────────────────────────────────────────────
+  /tryouts:
+    get:
+      operationId: listTryouts
+      tags: [tryouts]
+      summary: List tryout requests (as player or club captain)
+      parameters:
+        - name: role
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: playerId
+          in: query
+          schema:
+            type: integer
+        - name: clubId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of tryouts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TryoutList"
+    post:
+      operationId: createTryout
+      tags: [tryouts]
+      summary: Send a tryout request (player applies to club or club invites player)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TryoutInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tryout"
+
+  /tryouts/{id}:
+    get:
+      operationId: getTryout
+      tags: [tryouts]
+      summary: Get a specific tryout
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Tryout
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tryout"
+    patch:
+      operationId: updateTryout
+      tags: [tryouts]
+      summary: Update tryout status (accept, reject, schedule, complete)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TryoutUpdate"
+      responses:
+        "200":
+          description: Updated tryout
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tryout"
+
+  /tryouts/{id}/rate:
+    post:
+      operationId: rateTryout
+      tags: [tryouts]
+      summary: Submit a rating after a completed tryout
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RatingInput"
+      responses:
+        "201":
+          description: Rating submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rating"
+
+  # ─── NOTIFICATIONS ──────────────────────────────────────────────────────────
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List notifications for current user
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationList"
+
+  /notifications/{id}:
+    patch:
+      operationId: updateNotification
+      tags: [notifications]
+      summary: Mark notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationUpdate"
+      responses:
+        "200":
+          description: Updated notification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+
+  # ─── STATS ──────────────────────────────────────────────────────────────────
+  /stats/platform:
+    get:
+      operationId: getPlatformStats
+      tags: [stats]
+      summary: Get overall platform stats (total players, clubs, tryouts)
+      responses:
+        "200":
+          description: Platform stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformStats"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    # ─── PLAYER SCHEMAS ────────────────────────────────────────────────────────
+    Player:
+      type: object
+      required: [id, userId, gamertag, platform, mainPosition, overallRating, country, timezone, freeAgent, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        gamertag:
+          type: string
+        displayName:
+          type: ["string", "null"]
+        platform:
+          type: string
+          description: "PS5, Xbox, PC"
+        mainPosition:
+          type: string
+          description: "GK, RB, CB, LB, CDM, CM, CAM, RM, LM, RW, LW, ST"
+        secondaryPosition:
+          type: ["string", "null"]
+        overallRating:
+          type: integer
+          description: "Player OVR 1-99"
+        goals:
+          type: ["integer", "null"]
+        assists:
+          type: ["integer", "null"]
+        passAccuracy:
+          type: ["number", "null"]
+        cleanSheets:
+          type: ["integer", "null"]
+        matchesPlayed:
+          type: ["integer", "null"]
+        country:
+          type: string
+        timezone:
+          type: string
+        availableDays:
+          type: ["string", "null"]
+          description: "JSON array of days e.g. [\"Mon\",\"Tue\"]"
+        availableFrom:
+          type: ["string", "null"]
+          description: "HH:MM"
+        availableTo:
+          type: ["string", "null"]
+          description: "HH:MM"
+        bio:
+          type: ["string", "null"]
+        freeAgent:
+          type: boolean
+        clubId:
+          type: ["integer", "null"]
+        clubName:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        averageRating:
+          type: ["number", "null"]
+        totalRatings:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+
+    PlayerList:
+      type: object
+      required: [players, total]
+      properties:
+        players:
+          type: array
+          items:
+            $ref: "#/components/schemas/Player"
+        total:
+          type: integer
+
+    PlayerInput:
+      type: object
+      required: [gamertag, platform, mainPosition, overallRating, country, timezone]
+      properties:
+        gamertag:
+          type: string
+        displayName:
+          type: string
+        platform:
+          type: string
+        mainPosition:
+          type: string
+        secondaryPosition:
+          type: string
+        overallRating:
+          type: integer
+        goals:
+          type: integer
+        assists:
+          type: integer
+        passAccuracy:
+          type: number
+        cleanSheets:
+          type: integer
+        matchesPlayed:
+          type: integer
+        country:
+          type: string
+        timezone:
+          type: string
+        availableDays:
+          type: string
+        availableFrom:
+          type: string
+        availableTo:
+          type: string
+        bio:
+          type: string
+        avatarUrl:
+          type: string
+
+    PlayerUpdate:
+      type: object
+      properties:
+        gamertag:
+          type: string
+        displayName:
+          type: string
+        platform:
+          type: string
+        mainPosition:
+          type: string
+        secondaryPosition:
+          type: string
+        overallRating:
+          type: integer
+        goals:
+          type: integer
+        assists:
+          type: integer
+        passAccuracy:
+          type: number
+        cleanSheets:
+          type: integer
+        matchesPlayed:
+          type: integer
+        country:
+          type: string
+        timezone:
+          type: string
+        availableDays:
+          type: string
+        availableFrom:
+          type: string
+        availableTo:
+          type: string
+        bio:
+          type: string
+        freeAgent:
+          type: boolean
+        avatarUrl:
+          type: string
+
+    # ─── CLUB SCHEMAS ──────────────────────────────────────────────────────────
+    Club:
+      type: object
+      required: [id, captainId, name, platform, division, style, country, createdAt]
+      properties:
+        id:
+          type: integer
+        captainId:
+          type: integer
+        captainGamertag:
+          type: ["string", "null"]
+        name:
+          type: string
+        platform:
+          type: string
+        division:
+          type: integer
+          description: "Division 1-10 (1 = top)"
+        style:
+          type: string
+          description: "casual, competitive, semi-competitive"
+        country:
+          type: string
+        description:
+          type: ["string", "null"]
+        logoUrl:
+          type: ["string", "null"]
+        playDays:
+          type: ["string", "null"]
+          description: "JSON array of days"
+        playFrom:
+          type: ["string", "null"]
+        playTo:
+          type: ["string", "null"]
+        openPositions:
+          type: ["string", "null"]
+          description: "JSON array of open positions"
+        memberCount:
+          type: ["integer", "null"]
+        maxMembers:
+          type: ["integer", "null"]
+        wins:
+          type: ["integer", "null"]
+        losses:
+          type: ["integer", "null"]
+        draws:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+
+    ClubList:
+      type: object
+      required: [clubs, total]
+      properties:
+        clubs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Club"
+        total:
+          type: integer
+
+    ClubInput:
+      type: object
+      required: [name, platform, division, style, country]
+      properties:
+        name:
+          type: string
+        platform:
+          type: string
+        division:
+          type: integer
+        style:
+          type: string
+        country:
+          type: string
+        description:
+          type: string
+        logoUrl:
+          type: string
+        playDays:
+          type: string
+        playFrom:
+          type: string
+        playTo:
+          type: string
+        openPositions:
+          type: string
+        maxMembers:
+          type: integer
+
+    ClubUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        platform:
+          type: string
+        division:
+          type: integer
+        style:
+          type: string
+        country:
+          type: string
+        description:
+          type: string
+        logoUrl:
+          type: string
+        playDays:
+          type: string
+        playFrom:
+          type: string
+        playTo:
+          type: string
+        openPositions:
+          type: string
+        maxMembers:
+          type: integer
+        wins:
+          type: integer
+        losses:
+          type: integer
+        draws:
+          type: integer
+
+    # ─── MEMBER SCHEMAS ────────────────────────────────────────────────────────
+    Member:
+      type: object
+      required: [id, clubId, playerId, role, joinedAt]
+      properties:
+        id:
+          type: integer
+        clubId:
+          type: integer
+        playerId:
+          type: integer
+        playerGamertag:
+          type: ["string", "null"]
+        playerPosition:
+          type: ["string", "null"]
+        playerRating:
+          type: ["integer", "null"]
+        role:
+          type: string
+          description: "captain, vice-captain, player"
+        joinedAt:
+          type: string
+
+    MemberList:
+      type: object
+      required: [members]
+      properties:
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/Member"
+
+    MemberInput:
+      type: object
+      required: [playerId]
+      properties:
+        playerId:
+          type: integer
+        role:
+          type: string
+
+    # ─── TRYOUT SCHEMAS ────────────────────────────────────────────────────────
+    Tryout:
+      type: object
+      required: [id, clubId, playerId, initiatedBy, status, createdAt]
+      properties:
+        id:
+          type: integer
+        clubId:
+          type: integer
+        clubName:
+          type: ["string", "null"]
+        clubLogoUrl:
+          type: ["string", "null"]
+        playerId:
+          type: integer
+        playerGamertag:
+          type: ["string", "null"]
+        playerPosition:
+          type: ["string", "null"]
+        playerRating:
+          type: ["integer", "null"]
+        initiatedBy:
+          type: string
+          description: "player or club"
+        status:
+          type: string
+          description: "pending, accepted, rejected, scheduled, completed, cancelled"
+        scheduledAt:
+          type: ["string", "null"]
+        message:
+          type: ["string", "null"]
+        playerRatingScore:
+          type: ["number", "null"]
+        clubRatingScore:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    TryoutList:
+      type: object
+      required: [tryouts, total]
+      properties:
+        tryouts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tryout"
+        total:
+          type: integer
+
+    TryoutInput:
+      type: object
+      required: [clubId, playerId, initiatedBy]
+      properties:
+        clubId:
+          type: integer
+        playerId:
+          type: integer
+        initiatedBy:
+          type: string
+        message:
+          type: string
+
+    TryoutUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+        scheduledAt:
+          type: string
+        message:
+          type: string
+
+    # ─── RATING SCHEMAS ────────────────────────────────────────────────────────
+    Rating:
+      type: object
+      required: [id, tryoutId, ratedBy, score, createdAt]
+      properties:
+        id:
+          type: integer
+        tryoutId:
+          type: integer
+        ratedBy:
+          type: string
+          description: "player or club"
+        score:
+          type: number
+          description: "1.0 to 5.0"
+        comment:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    RatingInput:
+      type: object
+      required: [ratedBy, score]
+      properties:
+        ratedBy:
+          type: string
+        score:
+          type: number
+        comment:
+          type: string
+
+    # ─── NOTIFICATION SCHEMAS ──────────────────────────────────────────────────
+    Notification:
+      type: object
+      required: [id, userId, type, message, read, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        type:
+          type: string
+          description: "tryout_request, tryout_accepted, tryout_rejected, tryout_scheduled, tryout_rated, club_invite"
+        message:
+          type: string
+        relatedId:
+          type: ["integer", "null"]
+        read:
+          type: boolean
+        createdAt:
+          type: string
+
+    NotificationList:
+      type: object
+      required: [notifications, unreadCount]
+      properties:
+        notifications:
+          type: array
+          items:
+            $ref: "#/components/schemas/Notification"
+        unreadCount:
+          type: integer
+
+    NotificationUpdate:
+      type: object
+      properties:
+        read:
+          type: boolean
+
+    # ─── STATS SCHEMAS ─────────────────────────────────────────────────────────
+    PlatformStats:
+      type: object
+      required: [totalPlayers, totalClubs, totalTryouts, freeAgents, activeClubs]
+      properties:
+        totalPlayers:
+          type: integer
+        totalClubs:
+          type: integer
+        totalTryouts:
+          type: integer
+        freeAgents:
+          type: integer
+        activeClubs:
+          type: integer
+        byPlatform:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlatformBreakdown"
+        byPosition:
+          type: array
+          items:
+            $ref: "#/components/schemas/PositionBreakdown"
+
+    PlatformBreakdown:
+      type: object
+      required: [platform, count]
+      properties:
+        platform:
+          type: string
+        count:
+          type: integer
+
+    PositionBreakdown:
+      type: object
+      required: [position, count]
+      properties:
+        position:
+          type: string
+        count:
+          type: integer

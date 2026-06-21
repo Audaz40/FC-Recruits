@@ -358,6 +358,17 @@ export async function customFetch<T = unknown>(
     }
   }
 
+  if (typeof window !== "undefined" && window.localStorage) {
+    let userId = localStorage.getItem("fc_user_id");
+    if (!userId) {
+      userId = "user_" + Math.random().toString(36).substring(2, 11);
+      localStorage.setItem("fc_user_id", userId);
+    }
+    if (!headers.has("x-user-id")) {
+      headers.set("x-user-id", userId);
+    }
+  }
+
   const requestInfo = { method, url: resolveUrl(input) };
 
   const response = await fetch(input, { ...init, method, headers });

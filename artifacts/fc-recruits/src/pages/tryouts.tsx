@@ -1,0 +1,1 @@
+export default function Tryouts() { return <div className="p-8">Tryouts Page</div>; }
