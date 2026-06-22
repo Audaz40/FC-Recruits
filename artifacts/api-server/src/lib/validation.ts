@@ -187,6 +187,73 @@ export const validatePlayerInput = (data: any) => {
     availableTo: timeSchema.optional().nullable(),
     bio: bioSchema,
     avatarUrl: urlSchema,
+  }).superRefine((val, ctx) => {
+    // Algoritmo de control de fraude (Anti-Mentiras)
+    if (val.matchesPlayed != null && val.matchesPlayed > 0) {
+      const matches = val.matchesPlayed;
+      
+      // Límite realista de goles por partido
+      if (val.goals != null && val.goals > matches * 5) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Fraude detectado: Los goles declarados son estadísticamente imposibles para los partidos jugados.",
+          path: ["goals"]
+        });
+      }
+      
+      // Límite realista de asistencias por partido
+      if (val.assists != null && val.assists > matches * 5) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Fraude detectado: Las asistencias declaradas son estadísticamente imposibles para los partidos jugados.",
+          path: ["assists"]
+        });
+      }
+      
+      // Imposible tener más porterías a cero que partidos
+      if (val.cleanSheets != null && val.cleanSheets > matches) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Fraude detectado: Las porterías imbatidas no pueden ser mayores a los partidos jugados.",
+          path: ["cleanSheets"]
+        });
+      }
+    } else if (val.matchesPlayed === 0 || val.matchesPlayed == null) {
+      // Si no ha jugado partidos, no puede tener stats
+      if (val.goals != null && val.goals > 0) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "No puedes tener goles si no has jugado partidos.", path: ["goals"] });
+      }
+      if (val.assists != null && val.assists > 0) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "No puedes tener asistencias si no has jugado partidos.", path: ["assists"] });
+      }
+      if (val.cleanSheets != null && val.cleanSheets > 0) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "No puedes tener porterías a cero si no has jugado partidos.", path: ["cleanSheets"] });
+      }
+    }
+    
+    // Validación de GRL basado en partidos jugados (Simulando nivel real de EA)
+    const matches = val.matchesPlayed || 0;
+    if (val.overallRating > 84 && matches < 30) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Fraude detectado: Es imposible tener más de 84 de GRL con menos de 30 partidos jugados en Clubes Pro.",
+        path: ["overallRating"]
+      });
+    }
+    if (val.overallRating > 88 && matches < 100) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Fraude detectado: Es imposible tener más de 88 de GRL con menos de 100 partidos jugados en Clubes Pro.",
+        path: ["overallRating"]
+      });
+    }
+    if (val.overallRating > 92 && matches < 250) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Fraude detectado: Es imposible tener más de 92 de GRL con menos de 250 partidos jugados en Clubes Pro.",
+        path: ["overallRating"]
+      });
+    }
   });
 
   return schema.safeParse(data);
