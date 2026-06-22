@@ -10,6 +10,8 @@ import {
   RateTryoutParams,
   RateTryoutBody,
 } from "@workspace/api-zod";
+import { strictRateLimit } from "../middlewares/rateLimit";
+import { requireTrustScore } from "../middlewares/trustScore";
 
 const router: IRouter = Router();
 
@@ -60,7 +62,7 @@ router.get("/tryouts", async (req, res): Promise<void> => {
   res.json({ tryouts: enriched, total: enriched.length });
 });
 
-router.post("/tryouts", async (req, res): Promise<void> => {
+router.post("/tryouts", strictRateLimit, requireTrustScore("createTryout"), async (req, res): Promise<void> => {
   const userId = getUserId(req);
   if (!userId) {
     res.status(401).json({ error: "X-User-Id header required" });
@@ -124,7 +126,7 @@ router.get("/tryouts/:id", async (req, res): Promise<void> => {
   res.json(enriched);
 });
 
-router.patch("/tryouts/:id", async (req, res): Promise<void> => {
+router.patch("/tryouts/:id", strictRateLimit, async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = UpdateTryoutParams.safeParse({ id: parseInt(raw, 10) });
   if (!params.success) {
@@ -177,7 +179,7 @@ router.patch("/tryouts/:id", async (req, res): Promise<void> => {
   res.json(enriched);
 });
 
-router.post("/tryouts/:id/rate", async (req, res): Promise<void> => {
+router.post("/tryouts/:id/rate", strictRateLimit, async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = RateTryoutParams.safeParse({ id: parseInt(raw, 10) });
   if (!params.success) {

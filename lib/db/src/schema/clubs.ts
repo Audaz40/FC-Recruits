@@ -20,6 +20,7 @@ export const clubsTable = pgTable("clubs", {
   wins: integer("wins").default(0),
   losses: integer("losses").default(0),
   draws: integer("draws").default(0),
+  trustScore: integer("trust_score").notNull().default(50), // 0-100, starts at 50
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

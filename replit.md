@@ -10,6 +10,7 @@ LinkedIn-style recruitment platform for EA Sports FC Pro Clubs — players find 
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
+- `pnpm --filter @workspace/db run seed` — seed the database with sample data (8 players, 2 clubs, memberships, tryouts, ratings, notifications)
 - Required env: `DATABASE_URL` — Postgres connection string (auto-provisioned)
 
 ## Stack
@@ -57,7 +58,6 @@ _Populate as you build — explicit user instructions worth remembering across s
 - `players/featured` only returns free agents; `clubs/featured` only returns clubs with open positions.
 - The `X-User-Id` header must be sent with every mutating request — the custom-fetch does this automatically from localStorage.
 - Express 5: use `/{*splat}` not `*` for wildcard routes. Parse `req.params.id` with parseInt before use.
-- Seed data: 8 players (IDs 1-8), 2 clubs (IDs 1-2), 2 tryouts (IDs 1-2). Users with IDs `user_seed_*` are synthetic.
 
 ## Pointers
 

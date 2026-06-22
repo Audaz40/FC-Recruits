@@ -8,6 +8,8 @@ import {
   UpdatePlayerParams,
   UpdatePlayerBody,
 } from "@workspace/api-zod";
+import { strictRateLimit, searchRateLimit } from "../middlewares/rateLimit";
+import { validatePlayerInput } from "../lib/validation";
 
 const router: IRouter = Router();
 
@@ -40,7 +42,7 @@ async function enrichPlayer(player: any) {
   };
 }
 
-router.get("/players", async (req, res): Promise<void> => {
+router.get("/players", searchRateLimit, async (req, res): Promise<void> => {
   const params = ListPlayersQueryParams.safeParse(req.query);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -70,7 +72,7 @@ router.get("/players", async (req, res): Promise<void> => {
   res.json({ players: enriched, total: countResult[0]?.count ?? 0 });
 });
 
-router.post("/players", async (req, res): Promise<void> => {
+router.post("/players", strictRateLimit, async (req, res): Promise<void> => {
   const userId = getUserId(req);
   if (!userId) {
     res.status(401).json({ error: "X-User-Id header required" });
@@ -86,6 +88,13 @@ router.post("/players", async (req, res): Promise<void> => {
   const parsed = CreatePlayerBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  // Additional validation for security
+  const additionalValidation = validatePlayerInput(parsed.data);
+  if (!additionalValidation.success) {
+    res.status(400).json({ error: additionalValidation.error.message });
     return;
   }
 
@@ -139,7 +148,7 @@ router.get("/players/:id", async (req, res): Promise<void> => {
   res.json(enriched);
 });
 
-router.patch("/players/:id", async (req, res): Promise<void> => {
+router.patch("/players/:id", strictRateLimit, async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = UpdatePlayerParams.safeParse({ id: parseInt(raw, 10) });
   if (!params.success) {
@@ -161,6 +170,13 @@ router.patch("/players/:id", async (req, res): Promise<void> => {
   const parsed = UpdatePlayerBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  // Additional validation for security
+  const additionalValidation = validatePlayerInput(parsed.data);
+  if (!additionalValidation.success) {
+    res.status(400).json({ error: additionalValidation.error.message });
     return;
   }
 

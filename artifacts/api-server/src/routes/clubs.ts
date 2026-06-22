@@ -13,6 +13,9 @@ import {
   AddClubMemberBody,
   RemoveClubMemberParams,
 } from "@workspace/api-zod";
+import { strictRateLimit, searchRateLimit } from "../middlewares/rateLimit";
+import { validateClubInput } from "../lib/validation";
+import { requireTrustScore } from "../middlewares/trustScore";
 
 const router: IRouter = Router();
 
@@ -37,7 +40,7 @@ async function enrichClub(club: any) {
   };
 }
 
-router.get("/clubs", async (req, res): Promise<void> => {
+router.get("/clubs", searchRateLimit, async (req, res): Promise<void> => {
   const params = ListClubsQueryParams.safeParse(req.query);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -65,7 +68,7 @@ router.get("/clubs", async (req, res): Promise<void> => {
   res.json({ clubs: enriched, total: countResult[0]?.count ?? 0 });
 });
 
-router.post("/clubs", async (req, res): Promise<void> => {
+router.post("/clubs", strictRateLimit, requireTrustScore("createClub"), async (req, res): Promise<void> => {
   const userId = getUserId(req);
   if (!userId) {
     res.status(401).json({ error: "X-User-Id header required" });
@@ -81,6 +84,13 @@ router.post("/clubs", async (req, res): Promise<void> => {
   const parsed = CreateClubBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  // Additional validation for security
+  const additionalValidation = validateClubInput(parsed.data);
+  if (!additionalValidation.success) {
+    res.status(400).json({ error: additionalValidation.error.message });
     return;
   }
 
@@ -123,7 +133,7 @@ router.get("/clubs/:id", async (req, res): Promise<void> => {
   res.json(enriched);
 });
 
-router.patch("/clubs/:id", async (req, res): Promise<void> => {
+router.patch("/clubs/:id", strictRateLimit, async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = UpdateClubParams.safeParse({ id: parseInt(raw, 10) });
   if (!params.success) {
@@ -150,12 +160,19 @@ router.patch("/clubs/:id", async (req, res): Promise<void> => {
     return;
   }
 
+  // Additional validation for security
+  const additionalValidation = validateClubInput(parsed.data);
+  if (!additionalValidation.success) {
+    res.status(400).json({ error: additionalValidation.error.message });
+    return;
+  }
+
   const [updated] = await db.update(clubsTable).set(parsed.data).where(eq(clubsTable.id, params.data.id)).returning();
   const enriched = await enrichClub(updated);
   res.json(enriched);
 });
 
-router.delete("/clubs/:id", async (req, res): Promise<void> => {
+router.delete("/clubs/:id", strictRateLimit, async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = DeleteClubParams.safeParse({ id: parseInt(raw, 10) });
   if (!params.success) {
@@ -206,7 +223,7 @@ router.get("/clubs/:id/members", async (req, res): Promise<void> => {
   res.json({ members: enriched });
 });
 
-router.post("/clubs/:id/members", async (req, res): Promise<void> => {
+router.post("/clubs/:id/members", strictRateLimit, async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = AddClubMemberParams.safeParse({ id: parseInt(raw, 10) });
   if (!params.success) {
@@ -240,7 +257,7 @@ router.post("/clubs/:id/members", async (req, res): Promise<void> => {
   });
 });
 
-router.delete("/clubs/:id/members/:playerId", async (req, res): Promise<void> => {
+router.delete("/clubs/:id/members/:playerId", strictRateLimit, async (req, res): Promise<void> => {
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const rawPlayerId = Array.isArray(req.params.playerId) ? req.params.playerId[0] : req.params.playerId;
   const params = RemoveClubMemberParams.safeParse({ id: parseInt(rawId, 10), playerId: parseInt(rawPlayerId, 10) });

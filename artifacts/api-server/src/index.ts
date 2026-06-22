@@ -1,7 +1,11 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { config } from "dotenv";
 
-const rawPort = process.env["PORT"];
+// Load .env file from project root
+config({ path: "../../.env" });
+
+const rawPort = process.env["API_PORT"] || process.env["PORT"];
 
 if (!rawPort) {
   throw new Error(

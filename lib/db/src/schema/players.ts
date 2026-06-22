@@ -24,6 +24,7 @@ export const playersTable = pgTable("players", {
   bio: text("bio"),
   freeAgent: boolean("free_agent").notNull().default(true),
   clubId: integer("club_id"),
+  trustScore: integer("trust_score").notNull().default(50), // 0-100, starts at 50
   avatarUrl: text("avatar_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
