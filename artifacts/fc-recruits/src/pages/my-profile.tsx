@@ -35,7 +35,7 @@ export default function MyProfile() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const qc = useQueryClient();
-  const { data: player, isLoading } = useGetMyPlayer({ query: { retry: false } });
+  const { data: player, isLoading } = useGetMyPlayer();
   const { data: tryoutsData } = useListTryouts(
     { playerId: player?.id },
     { query: { enabled: !!player?.id, queryKey: getListTryoutsQueryKey({ playerId: player?.id }) } }

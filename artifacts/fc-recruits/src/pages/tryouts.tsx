@@ -23,17 +23,17 @@ type ActionType = "accept" | "reject" | "schedule" | "rate" | null;
 export default function Tryouts() {
   const { toast } = useToast();
   const qc = useQueryClient();
-  const { data: myPlayer, isLoading: playerLoading } = useGetMyPlayer({ query: { retry: false } });
+  const { data: myPlayer, isLoading: playerLoading } = useGetMyPlayer();
 
   const isCaptain = myPlayer?.clubId && myPlayer?.id === myPlayer?.id; // always true when clubId exists — refine below
 
   const { data: incomingData, isLoading: loadingIn } = useListTryouts(
-    { clubId: myPlayer?.clubId ?? 0 },
-    { query: { enabled: !!myPlayer?.clubId, queryKey: getListTryoutsQueryKey({ clubId: myPlayer?.clubId }) } }
+    { clubId: myPlayer?.clubId || undefined },
+    { query: { enabled: !!myPlayer?.clubId, queryKey: getListTryoutsQueryKey({ clubId: myPlayer?.clubId || undefined }) } }
   );
   const { data: outgoingData, isLoading: loadingOut } = useListTryouts(
-    { playerId: myPlayer?.id ?? 0 },
-    { query: { enabled: !!myPlayer?.id, queryKey: getListTryoutsQueryKey({ playerId: myPlayer?.id }) } }
+    { playerId: myPlayer?.id || undefined },
+    { query: { enabled: !!myPlayer?.id, queryKey: getListTryoutsQueryKey({ playerId: myPlayer?.id || undefined }) } }
   );
 
   const updateTryout = useUpdateTryout();
@@ -46,8 +46,8 @@ export default function Tryouts() {
   const [ratingComment, setRatingComment] = useState("");
 
   const invalidate = () => {
-    qc.invalidateQueries({ queryKey: getListTryoutsQueryKey({ clubId: myPlayer?.clubId }) });
-    qc.invalidateQueries({ queryKey: getListTryoutsQueryKey({ playerId: myPlayer?.id }) });
+    qc.invalidateQueries({ queryKey: getListTryoutsQueryKey({ clubId: myPlayer?.clubId || undefined }) });
+    qc.invalidateQueries({ queryKey: getListTryoutsQueryKey({ playerId: myPlayer?.id || undefined }) });
   };
 
   const doUpdate = (id: number, status: string, extra: Record<string, any> = {}) => {

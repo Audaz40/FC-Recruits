@@ -7,8 +7,8 @@ import { Button } from "./ui/button";
 
 export default function Layout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
-  const { data: myPlayer } = useGetMyPlayer({ query: { retry: false } });
-  const { data: notifications } = useListNotifications({ query: { retry: false } });
+  const { data: myPlayer } = useGetMyPlayer();
+  const { data: notifications } = useListNotifications();
 
   const unreadCount = notifications?.unreadCount || 0;
 

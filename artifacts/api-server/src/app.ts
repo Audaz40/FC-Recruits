@@ -1,15 +1,20 @@
 import express, { type Express } from "express";
 import cors from "cors";
 import helmet from "helmet";
+import hpp from "hpp";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { generalRateLimit, strictRateLimit, searchRateLimit } from "./middlewares/rateLimit";
+import { errorHandler } from "./middlewares/errorHandler";
 
 const app: Express = express();
 
 // Web security: Set security HTTP headers
 app.use(helmet());
+
+// Web security: Prevent HTTP Parameter Pollution
+app.use(hpp());
 
 app.use(
   pinoHttp({
@@ -46,5 +51,8 @@ app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(generalRateLimit);
 
 app.use("/api", router);
+
+// Global error handler
+app.use(errorHandler);
 
 export default app;

@@ -11,7 +11,7 @@ import {
   RateTryoutBody,
 } from "@workspace/api-zod";
 import { strictRateLimit } from "../middlewares/rateLimit";
-import { requireTrustScore } from "../middlewares/trustScore";
+import { requireTrustScore, adjustTrustScore, adjustClubTrustScore } from "../middlewares/trustScore";
 
 const router: IRouter = Router();
 
@@ -209,6 +209,12 @@ router.post("/tryouts/:id/rate", strictRateLimit, async (req, res): Promise<void
   // Update the tryout with the rating score
   if (parsed.data.ratedBy === "player") {
     await db.update(tryoutsTable).set({ playerRatingScore: parsed.data.score, status: "completed" }).where(eq(tryoutsTable.id, params.data.id));
+    
+    // Adjust club trust score based on player's rating
+    const scoreDiff = parsed.data.score >= 4 ? 2 : (parsed.data.score <= 2 ? -2 : 0);
+    if (scoreDiff !== 0) {
+      await adjustClubTrustScore(tryout.clubId, scoreDiff, `Rated ${parsed.data.score}/5 by player in tryout`);
+    }
   } else {
     await db.update(tryoutsTable).set({ clubRatingScore: parsed.data.score, status: "completed" }).where(eq(tryoutsTable.id, params.data.id));
     // Notify player of their rating
@@ -220,6 +226,12 @@ router.post("/tryouts/:id/rate", strictRateLimit, async (req, res): Promise<void
         message: `You received a ${parsed.data.score}/5 rating from your tryout`,
         relatedId: tryout.id,
       });
+
+      // Adjust player trust score based on club's rating
+      const scoreDiff = parsed.data.score >= 4 ? 2 : (parsed.data.score <= 2 ? -2 : 0);
+      if (scoreDiff !== 0) {
+        await adjustTrustScore(player.userId, scoreDiff, `Rated ${parsed.data.score}/5 by club in tryout`);
+      }
     }
   }
 

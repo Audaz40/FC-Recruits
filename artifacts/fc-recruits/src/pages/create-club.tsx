@@ -29,7 +29,7 @@ export default function CreateClub() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const createClub = useCreateClub();
-  const { data: myPlayer } = useGetMyPlayer({ query: { retry: false } });
+  const { data: myPlayer } = useGetMyPlayer();
 
   const [form, setForm] = useState({
     name: "",

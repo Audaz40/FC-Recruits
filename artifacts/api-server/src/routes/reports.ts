@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq, and, desc } from "drizzle-orm";
 import { db, reportsTable, playersTable, clubsTable } from "@workspace/db";
 import { strictRateLimit } from "../middlewares/rateLimit";
+import { adjustTrustScore, adjustClubTrustScore } from "../middlewares/trustScore";
 
 const router: IRouter = Router();
 
@@ -162,6 +163,18 @@ router.patch("/reports/:id", strictRateLimit, async (req, res): Promise<void> =>
   if (!report) {
     res.status(404).json({ error: "Report not found" });
     return;
+  }
+
+  // If report is resolved as valid, decrease trust score
+  if (status === "resolved") {
+    if (report.targetType === "player") {
+      const [player] = await db.select().from(playersTable).where(eq(playersTable.id, report.targetId));
+      if (player) {
+        await adjustTrustScore(player.userId, -10, `Report resolved: ${report.category}`);
+      }
+    } else if (report.targetType === "club") {
+      await adjustClubTrustScore(report.targetId, -10, `Report resolved: ${report.category}`);
+    }
   }
 
   res.json(report);
